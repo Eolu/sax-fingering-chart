@@ -1,0 +1,12 @@
+[package]
+name = "fingering_chart"
+version = "0.1.0"
+authors = ["Griffin O'Neill <gsoneill1003@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+midly = "0.4.0"
+image = "0.23.8"
+lazy_static = "1.4.0"
