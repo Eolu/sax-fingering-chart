@@ -169,7 +169,9 @@ impl Track
         for row_image in self.row_images(notes_per_row, spacing)
         {
             let previous = track_image;
-            track_image = DynamicImage::new_rgb8(std::cmp::max(previous.width(), row_image.width()), previous.height() + row_image.height() + spacing as u32);
+            let new_width = std::cmp::max(previous.width(), row_image.width());
+            let new_height = previous.height() + row_image.height() + spacing as u32;
+            track_image = DynamicImage::new_rgb8(new_width, new_height);
             track_image.copy_from(&previous, 0, 0).expect("Failed to regenerate track image");
             track_image.copy_from(&row_image, 0, previous.height()).expect("Failed to generate track image");
         }
@@ -189,7 +191,9 @@ impl Track
                     .map(|col| self.notes[(row * notes_per_row) + col])
                 {
                     let previous = row_image;
-                    row_image = DynamicImage::new_rgb8(previous.width() + note.image.width() + spacing as u32, std::cmp::max(previous.height(), note.image.height()));
+                    let new_width = previous.width() + note.image.width() + spacing as u32;
+                    let new_height = std::cmp::max(previous.height(), note.image.height());
+                    row_image = DynamicImage::new_rgb8(new_width, new_height);
                     row_image.copy_from(&previous, 0, 0).expect("Failed to regenerate row image");
                     row_image.copy_from(&note.image, previous.width(), 0).expect("Failed to generate row image");
                 }
