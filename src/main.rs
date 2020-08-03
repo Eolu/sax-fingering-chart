@@ -1,5 +1,4 @@
 #![allow(non_upper_case_globals)]
-
 #[macro_use]
 extern crate lazy_static;
 
@@ -7,6 +6,7 @@ use std::{fs, fmt::Display};
 use midly::{Smf, EventKind::*, MidiMessage::*, number::u7};
 use image::{DynamicImage, GenericImageView, GenericImage};
 
+const SPACING: usize = 10;
 const CHART_DIR: &str = "C:/Project/Workspace/Rust/fingering_chart/res/fingerings";
 const OUTPUT_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/out";
 const MIDI_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/res/kass_notes.mid";
@@ -71,14 +71,13 @@ load_note!(Eb5, 75);
 /// Entry-point
 fn main() -> Result<(), image::error::ImageError>
 {
-    const spacing: usize = 10;
     let fingering_chart = Song::load(MIDI_PATH);
-    fingering_chart.output_entire(OUTPUT_PATH, NOTES_PER_ROW, spacing)?;
+    fingering_chart.output_entire(OUTPUT_PATH, NOTES_PER_ROW, SPACING)?;
     println!("{}", fingering_chart);
     Ok(())
 }
 
-/// Entire song, jsut a vec of tracks with some methods
+/// Entire song, just a vec of tracks with some methods
 pub struct Song
 {
     tracks: Vec<Track>
