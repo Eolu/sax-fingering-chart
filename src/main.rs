@@ -170,7 +170,7 @@ impl Track
         {
             let previous = track_image;
             track_image = DynamicImage::new_rgb8(std::cmp::max(previous.width(), row_image.width()), previous.height() + row_image.height() + spacing as u32);
-            track_image.copy_from(&previous, 0, 0).expect("Failed to generate track image");
+            track_image.copy_from(&previous, 0, 0).expect("Failed to regenerate track image");
             track_image.copy_from(&row_image, 0, previous.height()).expect("Failed to generate track image");
         }
         track_image
@@ -183,24 +183,16 @@ impl Track
             .take_while(move |row| row * notes_per_row < self.notes.len())
             .map(move |row| 
             {
-                let row_notes: Vec<&Note> = (0..notes_per_row)
+                let mut row_image: DynamicImage = DynamicImage::new_rgb8(spacing as u32, 0);
+                for note in (0..notes_per_row)
                     .take_while(|col| col + (row * notes_per_row) < self.notes.len())
                     .map(|col| self.notes[(row * notes_per_row) + col])
-                    .collect();
-
-                // Create an image
-                let width: u32 = row_notes.iter().map(|note| note.image.width()).sum::<u32>() + row_notes.len() as u32 * spacing as u32 + spacing as u32;
-                let height: u32 = row_notes.iter().map(|note| note.image.height()).max().unwrap_or(0);
-                let mut row_image: DynamicImage = DynamicImage::new_rgb8(width, height);
-
-                // Draw the image
-                let mut current_x: u32 = spacing as u32;
-                for note in row_notes
                 {
-                    row_image.copy_from(&note.image, current_x, 0).expect("Failed to generate row image");
-                    current_x += note.image.width() + spacing as u32;
+                    let previous = row_image;
+                    row_image = DynamicImage::new_rgb8(previous.width() + note.image.width() + spacing as u32, std::cmp::max(previous.height(), note.image.height()));
+                    row_image.copy_from(&previous, 0, 0).expect("Failed to regenerate row image");
+                    row_image.copy_from(&note.image, previous.width(), 0).expect("Failed to generate row image");
                 }
-
                 row_image
             }).collect()
     }
