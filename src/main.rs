@@ -17,6 +17,7 @@ const NOTES_PER_ROW: usize = 7;
 // TODO: Transpose midi file so most amount of notes can fit. Try octaves first.
 // Then try semitones (with warning). If impossible, leave out notes (with
 // warning).
+// TODO: Make this more general, right not it's hard-coded for the tenor sax (Bb transposed)
 
 /// Macro to load notes using lazy_static
 #[macro_export]
