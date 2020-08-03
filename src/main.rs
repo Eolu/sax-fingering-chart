@@ -271,9 +271,16 @@ impl Display for Song
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result 
     {
-        for track in self.tracks.iter()
+        for (i, track) in self.tracks.iter().enumerate()
         {
-            if let Err(e) = write!(f, "Track:{}\n", track)
+            if i > 0
+            {
+                if let Err(e) = write!(f, "\n")
+                {
+                    return Err(e);
+                }
+            }
+            if let Err(e) = write!(f, "Track:{}", track)
             {
                 return Err(e);
             }
