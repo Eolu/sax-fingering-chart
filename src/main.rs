@@ -5,14 +5,15 @@ extern crate lazy_static;
 
 use std::{fs, fmt::Display, collections::HashSet};
 use midly::{Smf, EventKind::*, MidiMessage::*, number::u7};
-use image::{DynamicImage, GenericImageView, GenericImage};
+use image::{DynamicImage, GenericImageView, GenericImage, error::ImageError};
 
+const TRANSPOSITION: Transposition = Transposition::Bb;
 const SPACING: usize = 10;
 // TODO: Find a way to let chart dir (and others) be set in a configuration file
-const CHART_DIR: &str = "C:/Project/Workspace/Rust/fingering_chart/res/fingerings";
+const CHART_DIR: &str = "C:/Project/Workspace/Rust/fingering_chart/res/fingerings_notranspose";
 const OUTPUT_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/out";
 //const MIDI_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/res/kass_notes.mid";
-const MIDI_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/res/bramble.mid";
+const MIDI_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/res/lizards.mid";
 const NOTES_PER_ROW: usize = 14;
 
 // TODO: Add altissimo fingerings
@@ -20,14 +21,20 @@ const NOTES_PER_ROW: usize = 14;
 // TODO: Transpose midi file so most amount of notes can fit. Try octaves first.
 // Then try semitones (with warning). If impossible, leave out notes (with
 // warning).
-// TODO: Make this more general, right not it's hard-coded for the tenor sax (Bb transposed)
+// TODO: Make this more general, right now it's hard-coded for the tenor sax (Bb transposed)
 // FIXME: This silently removes notes outside of range!
 
-// Note constants
-load_notes!
+#[allow(dead_code)]
+enum Transposition
 {
-    Ab2, 44,
-    A2, 45, 
+    C = 0,
+    Bb = 2,
+    Eb = -3
+}
+
+// Note constants
+define_notes!
+{
     Bb2, 46, 
     B2, 47, 
     C3, 48,  
@@ -57,13 +64,15 @@ load_notes!
     C5, 72,  
     Db5, 73,  
     D5, 74,  
-    Eb5, 75
+    Eb5, 75,
+    E5, 76,
+    F5, 77
     // Altissimo from here beyond: 
-    // E5, 76
+    // Gb5, 78
 }
 
 /// Entry-point
-fn main() -> Result<(), image::error::ImageError>
+fn main() -> Result<(), ImageError>
 {
     //let args: Vec<String> = env::args().collect();
     let fingering_chart = Song::load(MIDI_PATH);
@@ -116,7 +125,7 @@ impl Song
     }
 
     /// Output chart with each cell as an individual file
-    pub fn output_cells(&self, output_path: &str) -> Result<(), image::error::ImageError>
+    pub fn output_cells(&self, output_path: &str) -> Result<(), ImageError>
     {
         for track_index in 0..self.tracks.len()
         {
@@ -131,7 +140,7 @@ impl Song
     }
 
     /// Output chart with each row as an individual file
-    pub fn output_rows(&self, output_path: &str, notes_per_row: usize, spacing: usize) -> Result<(), image::error::ImageError>
+    pub fn output_rows(&self, output_path: &str, notes_per_row: usize, spacing: usize) -> Result<(), ImageError>
     {
         for track_index in 0..self.tracks.len()
         {
@@ -146,7 +155,7 @@ impl Song
     }
 
     /// Generate a chart and output to the given directory.
-    pub fn output_entire(&self, output_path: &str, notes_per_row: usize, spacing: usize) -> Result<(), image::error::ImageError>
+    pub fn output_entire(&self, output_path: &str, notes_per_row: usize, spacing: usize) -> Result<(), ImageError>
     {
         fs::create_dir_all(output_path)?;
         for track_index in 0..self.tracks.len()
@@ -180,8 +189,8 @@ impl Track
     pub fn row_images(&self, notes_per_row: usize, spacing: usize) -> Vec<DynamicImage>
     {
         (0..self.notes.len())
-            .take_while(move |row| row * notes_per_row < self.notes.len())
-            .map(move |row| 
+            .take_while(|row| row * notes_per_row < self.notes.len())
+            .map(|row| 
             {
                 let mut row_image: DynamicImage = DynamicImage::new_rgb8(spacing as u32, 0);
                 for note in (0..notes_per_row)
@@ -209,7 +218,7 @@ impl Track
 
 /// Macro to load notes using lazy_static
 #[macro_export]
-macro_rules! load_notes
+macro_rules! define_notes
 {
     ($($name: ident, $num: literal),*) => 
     {
@@ -230,7 +239,7 @@ macro_rules! load_notes
             /// Access a note via it's midi byte index.
             fn get(index: u7, notes: &mut HashSet<u8>) -> Option<&'static Note>
             {
-                match index.as_int()
+                match (index.as_int() + TRANSPOSITION as u8)
                 {
                     $(i if i == $name.byte => Some(&$name)),*,
                     i => 
