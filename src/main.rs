@@ -3,29 +3,12 @@
 #[macro_use]
 extern crate lazy_static;
 
+use clap::{Arg, App, ArgMatches};
 use std::{fs, fmt::Display, collections::HashSet};
 use midly::{Smf, EventKind::*, MidiMessage::*, number::u7};
 use image::{DynamicImage, GenericImageView, GenericImage, error::ImageError};
 
-const TRANSPOSITION: Transposition = Transposition::Bb;
-const SPACING: usize = 10;
-// TODO: Find a way to let chart dir (and others) be set in a configuration file
-const CHART_DIR: &str = "C:/Project/Workspace/Rust/fingering_chart/res/fingerings_notranspose";
-const OUTPUT_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/out";
-//const MIDI_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/res/kass_notes.mid";
-const MIDI_PATH: &str = "C:/Project/Workspace/Rust/fingering_chart/res/lizards.mid";
-const NOTES_PER_ROW: usize = 14;
-
-// TODO: Add altissimo fingerings
-// TODO: Add trill fingerings
-// TODO: Transpose midi file so most amount of notes can fit. Try octaves first.
-// Then try semitones (with warning). If impossible, leave out notes (with
-// warning).
-// TODO: Make this more general, right now it's hard-coded for the tenor sax (Bb transposed)
-// FIXME: This silently removes notes outside of range!
-
-#[allow(dead_code)]
-enum Transposition
+pub enum Transposition
 {
     C = 0,
     Bb = 2,
@@ -71,13 +54,93 @@ define_notes!
     // Gb5, 78
 }
 
+// Load args TODO: Consider using a config file instead of command line args
+lazy_static!
+{
+    static ref ARGS: ArgMatches<'static> = App::new("Saxophone Fingering Chart Generator")
+        .version("0.1")
+        .author("Griffin O'Neill <gsoneill1003@gmail.com>")
+        .arg(Arg::with_name("midi_file")
+            .help("Sets the source midi file to use in chart generation")
+            .index(1)
+            .required(true)
+            .takes_value(true))
+        .arg(Arg::with_name("transposition")
+            .help("Sets the transposition to use.")
+            .short("t")
+            .long("trans")
+            .possible_values(&["C", "Bb", "Eb"])
+            .default_value("Bb")
+            .takes_value(true))
+        .arg(Arg::with_name("spacing")
+            .help("Sets the visual spacing between fingering cha=rts")
+            .short("s")
+            .long("spacing")
+            .default_value("10")
+            .takes_value(true))
+        .arg(Arg::with_name("source_charts")
+            .help("Sets the directory containing the chart source files.")
+            .short("c")
+            .long("charts")
+            .default_value("./fingerings")
+            .takes_value(true))
+        .arg(Arg::with_name("notes_per_row")
+            .help("Sets the number of fingering charts per row")
+            .short("n")
+            .long("cols")
+            .default_value("14")
+            .takes_value(true))
+        .arg(Arg::with_name("output_format")
+            .help("Sets the output format. May output each fingering chart as an individual file, or as rows of a set length, or each entire tracks as a single file.")
+            .short("f")
+            .long("format")
+            .possible_values(&["separate", "rows", "tracks"])
+            .default_value("tracks")
+            .takes_value(true))
+        .arg(Arg::with_name("output_path")
+            .help("Sets the output path of generated chart files")
+            .short("o")
+            .long("output")
+            .default_value("./out")
+            .takes_value(true))
+        .get_matches();
+}
+
 /// Entry-point
 fn main() -> Result<(), ImageError>
 {
-    //let args: Vec<String> = env::args().collect();
-    let fingering_chart = Song::load(MIDI_PATH);
-    fingering_chart.output_entire(OUTPUT_PATH, NOTES_PER_ROW, SPACING)?;
-    println!("{}", fingering_chart);
+    match ARGS.value_of("midi_file")
+    {
+        Some(midi_path) => 
+        {
+            let transposition = Transposition::from(ARGS.value_of("transposition").unwrap());
+            let output_format = ARGS.value_of("output_format").unwrap();
+            let output_path: &str = ARGS.value_of("output_path").unwrap();
+            let fingering_chart = Song::load(midi_path, &transposition);
+            if output_format == "separate"
+            {
+                fingering_chart.output_cells(output_path)?
+            }
+            else
+            {
+                let notes_per_row: usize = ARGS.value_of("notes_per_row").unwrap().parse().unwrap();
+                let spacing: usize = ARGS.value_of("spacing").unwrap().parse().unwrap();
+                if output_format == "rows"
+                {
+                    fingering_chart.output_rows(output_path, notes_per_row, spacing)?
+                }
+                else
+                {
+                    fingering_chart.output_entire(output_path, notes_per_row, spacing)?
+                }
+            }
+            // println!("{}", fingering_chart)
+        },
+        None => 
+        {
+            eprintln!("Must specify a midi file path.")
+        }
+    }
     Ok(())
 }
 
@@ -104,7 +167,7 @@ pub struct Note
 impl Song
 {
     /// Parse a midi file. Generate a list containing all tracks. Tracks themselves are simply lists of notes.
-    pub fn load(midi_path: &str) -> Song
+    pub fn load(midi_path: &str, transposition: &Transposition) -> Song
     {
         // Parse a midi file
         let raw_data = fs::read(midi_path).expect("Failed to load midi data");
@@ -118,7 +181,7 @@ impl Song
             .iter()
             .map(|track| track
                 .iter()
-                .filter_map(|event| if let Midi { channel: _, message: NoteOn {key, vel: _} } = event.kind { Note::get(key, &mut notes) } else { None })
+                .filter_map(|event| if let Midi { channel: _, message: NoteOn {key, vel: _} } = event.kind { Note::get(key, transposition, &mut notes) } else { None })
                 .collect::<Vec<&Note>>())
             .filter_map(|notes| if notes.is_empty() { None } else { Some(Track{notes}) })
             .collect::<Vec<Track>>()}
@@ -224,7 +287,7 @@ macro_rules! define_notes
     {
         lazy_static!
         {
-            $( static ref $name: Note = Note::new($num, format!("{}/{}.png", CHART_DIR, stringify!($name))) );*;
+            $( static ref $name: Note = Note::new($num, format!("{}/{}.png", ARGS.value_of("source_charts").unwrap(), stringify!($name))) );*;
         }
 
         impl Note
@@ -237,9 +300,9 @@ macro_rules! define_notes
             }
 
             /// Access a note via it's midi byte index.
-            fn get(index: u7, notes: &mut HashSet<u8>) -> Option<&'static Note>
+            fn get(index: u7, transposition: &Transposition, notes: &mut HashSet<u8>) -> Option<&'static Note>
             {
-                match (index.as_int() + TRANSPOSITION as u8)
+                match (index.as_int() + *transposition as u8)
                 {
                     $(i if i == $name.byte => Some(&$name)),*,
                     i => 
@@ -270,7 +333,7 @@ impl Display for Song
                     return Err(e);
                 }
             }
-            if let Err(e) = write!(f, "Track:{}", track)
+            if let Err(e) = write!(f, "Track: {}", track)
             {
                 return Err(e);
             }
@@ -301,5 +364,27 @@ impl Display for Note
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result 
     {
         write!(f, "{}", self.name)
+    }
+}
+
+// Gets transposition from a string
+impl From<&str> for Transposition 
+{
+    fn from(string: &str) -> Self 
+    {
+        match string
+        {
+            "Bb" => Transposition::Bb,
+            "Eb" => Transposition::Eb,
+            _ => Transposition::C
+        }
+    }
+}
+impl Copy for Transposition {}
+impl Clone for Transposition
+{
+    fn clone(&self) -> Transposition 
+    {
+        *self
     }
 }
