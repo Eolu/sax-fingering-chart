@@ -8,6 +8,7 @@ use std::{fs, fmt::Display, collections::HashSet};
 use midly::{Smf, EventKind::*, MidiMessage::*, number::u7};
 use image::{DynamicImage, GenericImageView, GenericImage, error::ImageError};
 
+#[derive(Copy, Clone)]
 pub enum Transposition
 {
     C = 0,
@@ -378,13 +379,5 @@ impl From<&str> for Transposition
             "Eb" => Transposition::Eb,
             _ => Transposition::C
         }
-    }
-}
-impl Copy for Transposition {}
-impl Clone for Transposition
-{
-    fn clone(&self) -> Transposition 
-    {
-        *self
     }
 }
