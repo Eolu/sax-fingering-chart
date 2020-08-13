@@ -10,6 +10,7 @@ This program takes a MIDI file as input and generates fingering charts for saxop
 - `-c` Sets the directory containing source charts. This directory must contain a png file for each note used. Default value is `./fingerings`
 - `-f` Sets the output format. May use `tracks`, `rows`, or `separate`. `tracks` outputs charts for each midi track as a single file. `rows` splits tracks up into multiple files each containing a horizontal row of notes. `separate` outputs each individual note as a separate file. Default value is `tracks`.
 - `-n` Sets the number of notes per row. Not applicable when using `separate` output format. Default value is `14`
+- `-s` Sets the visual spacing between consecutive notes. Not applicable when using `separate` output format. Default value is `10`
 
 ## Planned (but stil unimplemented) Features   
 - A configuration file instead of commaand line args. Possibly allow both or either.
