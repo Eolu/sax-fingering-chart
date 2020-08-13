@@ -12,7 +12,7 @@ This program takes a MIDI file as input and generates fingering charts for saxop
 - `-n` Sets the number of notes per row. Not applicable when using `separate` output format. Default value is `14`
 - `-s` Sets the visual spacing between consecutive notes. Not applicable when using `separate` output format. Default value is `10`
 
-## Planned (but stil unimplemented) Features   
+## Planned Features   
 - A configuration file instead of commaand line args. Possibly allow both or either.
 - Fingerings for altissimo/trill
 - Detect if a midi file has notes out of range, have an option to automatically attempt to transpose the midi file to fit in the sax range (by octave first, then by semitone). Currently notes out of range re just left out with a warning
