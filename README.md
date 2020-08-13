@@ -16,7 +16,7 @@ This program takes a MIDI file as input and generates fingering charts for saxop
 - A configuration file instead of commaand line args. Possibly allow both or either.
 - Alternate fingerings. Right now a single fingering is used per note, and it may not necessarily be the optimal choice given the song. I'm considering adding some logic that takes the previous/next note into account to decide which fingering to show on the chart.
 - Fingerings for altissimo/trill
-- Detect if a midi file has notes out of range, have an option to automatically attempt to transpose the midi file to fit in the sax range (by octave first, then by semitone). Currently notes out of range re just left out with a warning
+- Detect if a midi file has notes out of range, have an option to automatically attempt to transpose the midi file to fit in the sax range (by octave first, then by semitone). Currently notes out of range are just left out with a warning
 
 ## Example   
 ![The Lizards](https://raw.githubusercontent.com/Eolu/fingering_chart/master/examples/lizards.png)   
