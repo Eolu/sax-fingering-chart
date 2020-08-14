@@ -5,7 +5,7 @@ extern crate lazy_static;
 
 use ron::de::from_str;
 use serde::Deserialize;
-use std::{fs, fmt::Display, collections::HashSet, env};
+use std::{fs, collections::HashSet, env};
 use midly::{Smf, EventKind::*, MidiMessage::*, number::u7};
 use image::{DynamicImage, GenericImageView, GenericImage, error::ImageError};
 
@@ -102,7 +102,6 @@ fn main() -> Result<(), ImageError>
                         OutputFormat::Rows => fingering_chart.output_rows(&config.output_path, config.notes_per_row, config.spacing)?,
                         OutputFormat::Separate => fingering_chart.output_cells(&config.output_path)?
                     }
-                    // println!("{}", fingering_chart)
                 }
                 Err(e) => eprintln!("Failed to load config: {}", e)
             }
@@ -127,7 +126,6 @@ pub struct Track
 /// Struct used for individual notes
 pub struct Note
 {
-    name: String,
     byte: u8,
     image: image::DynamicImage
 }
@@ -262,9 +260,7 @@ macro_rules! define_notes
         {
             fn new(byte: u8, image_path: String) -> Note
             {
-                let image = image::open(&image_path).expect(&format!("Failed to read {}", image_path));
-                let name = image_path[image_path.rfind('/').expect("Bad path") + 1 .. image_path.len() - 4].to_string();
-                Note { name, byte, image }
+                Note { byte, image: image::open(&image_path).expect(&format!("Failed to read {}", image_path)) }
             }
 
             /// Access a note via it's midi byte index.
@@ -284,53 +280,5 @@ macro_rules! define_notes
                 }
             }
         }
-    }
-}
-
-/// Prints every track in a song
-impl Display for Song
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result 
-    {
-        for (i, track) in self.tracks.iter().enumerate()
-        {
-            if i > 0
-            {
-                if let Err(e) = write!(f, "\n")
-                {
-                    return Err(e);
-                }
-            }
-            if let Err(e) = write!(f, "Track: {}", track)
-            {
-                return Err(e);
-            }
-        }
-        Ok(())
-    }
-}
-
-/// Prints every note in a track
-impl Display for Track
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result 
-    {
-        for note in self.notes.iter()
-        {
-            if let Err(e) = write!(f, "{} ", note)
-            {
-                return Err(e);
-            }
-        }
-        Ok(())
-    }
-}
-
-/// Prints the name of a note
-impl Display for Note
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result 
-    {
-        write!(f, "{}", self.name)
     }
 }
