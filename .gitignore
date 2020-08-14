@@ -1,2 +1,6 @@
 /target
 /out
+res/midi.png
+*.zip
+*.exe
+*.mid
