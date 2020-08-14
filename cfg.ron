@@ -1,0 +1,22 @@
+Config
+(
+    // The directory containing source charts. This directory must contain a png file for each note used.
+    source_charts: "./fingerings",
+
+    // The transposition. Supported values are: C, Bb, Eb
+    transposition: Bb,
+
+    // The output path. If this is a non-existent directory, will attempt to create.
+    output_path: "./out",
+
+    // The output format. May use `Tracks`, `Rows`, or `Separate`. `Tracks` outputs charts for each midi 
+    // track as a single file. `Rows` splits tracks up into multiple files each containing a horizontal 
+    // row of notes. `Separate` outputs each individual note as a separate file.
+    output_format: Tracks,
+
+    // The visual spacing between consecutive notes. Not applicable when using `Separate` output format.
+    spacing: 10,
+
+    // The number of notes per row. Not applicable when using `Separate` output format.
+    notes_per_row: 14
+)

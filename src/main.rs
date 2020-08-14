@@ -3,18 +3,11 @@
 #[macro_use]
 extern crate lazy_static;
 
-use clap::{Arg, App, ArgMatches};
-use std::{fs, fmt::Display, collections::HashSet};
+use ron::de::from_str;
+use serde::Deserialize;
+use std::{fs, fmt::Display, collections::HashSet, env};
 use midly::{Smf, EventKind::*, MidiMessage::*, number::u7};
 use image::{DynamicImage, GenericImageView, GenericImage, error::ImageError};
-
-#[derive(Copy, Clone)]
-pub enum Transposition
-{
-    C = 0,
-    Bb = 2,
-    Eb = -3
-}
 
 // Note constants
 define_notes!
@@ -55,92 +48,66 @@ define_notes!
     // Gb5, 78
 }
 
-// Load args TODO: Consider using a config file instead of command line args
+// Load configuration before executing main program
 lazy_static!
 {
-    static ref ARGS: ArgMatches<'static> = App::new("Saxophone Fingering Chart Generator")
-        .version("0.1")
-        .author("Griffin O'Neill <gsoneill1003@gmail.com>")
-        .arg(Arg::with_name("midi_file")
-            .help("Sets the source midi file to use in chart generation")
-            .index(1)
-            .required(true)
-            .takes_value(true))
-        .arg(Arg::with_name("transposition")
-            .help("Sets the transposition to use.")
-            .short("t")
-            .long("trans")
-            .possible_values(&["C", "Bb", "Eb"])
-            .default_value("Bb")
-            .takes_value(true))
-        .arg(Arg::with_name("spacing")
-            .help("Sets the visual spacing between fingering cha=rts")
-            .short("s")
-            .long("spacing")
-            .default_value("10")
-            .takes_value(true))
-        .arg(Arg::with_name("source_charts")
-            .help("Sets the directory containing the chart source files.")
-            .short("c")
-            .long("charts")
-            .default_value("./fingerings")
-            .takes_value(true))
-        .arg(Arg::with_name("notes_per_row")
-            .help("Sets the number of fingering charts per row")
-            .short("n")
-            .long("cols")
-            .default_value("14")
-            .takes_value(true))
-        .arg(Arg::with_name("output_format")
-            .help("Sets the output format. May output each fingering chart as an individual file, or as rows of a set length, or each entire tracks as a single file.")
-            .short("f")
-            .long("format")
-            .possible_values(&["separate", "rows", "tracks"])
-            .default_value("tracks")
-            .takes_value(true))
-        .arg(Arg::with_name("output_path")
-            .help("Sets the output path of generated chart files")
-            .short("o")
-            .long("output")
-            .default_value("./out")
-            .takes_value(true))
-        .get_matches();
+    static ref CONFIG: Result<Config, ron::error::Error> = std::fs::read_to_string("./cfg.ron").map_err(ron::error::Error::from).and_then(|str| from_str(&str));
+}
+
+/// The note transposition to use, supports saxes of any kind
+#[derive(Copy, Clone, Deserialize)]
+pub enum Transposition
+{
+    C = 0,
+    Bb = 2,
+    Eb = -3
+}
+
+/// The output format, determines how the chart images are layed out.
+#[derive(Copy, Clone, Deserialize, PartialEq)]
+pub enum OutputFormat
+{
+    Separate,
+    Rows,
+    Tracks
+}
+
+/// Data from the loaded cfg.ron file.
+#[derive(Deserialize)]
+struct Config 
+{
+    source_charts: String,
+    transposition: Transposition,
+    output_path: String,
+    output_format: OutputFormat,
+    spacing: usize,
+    notes_per_row: usize
 }
 
 /// Entry-point
 fn main() -> Result<(), ImageError>
 {
-    match ARGS.value_of("midi_file")
+    match env::args().skip(1).next()
     {
-        Some(midi_path) => 
+        Some(midi_file) => 
         {
-            let transposition = Transposition::from(ARGS.value_of("transposition").unwrap());
-            let output_format = ARGS.value_of("output_format").unwrap();
-            let output_path: &str = ARGS.value_of("output_path").unwrap();
-            let fingering_chart = Song::load(midi_path, &transposition);
-            if output_format == "separate"
+            match &*CONFIG
             {
-                fingering_chart.output_cells(output_path)?
-            }
-            else
-            {
-                let notes_per_row: usize = ARGS.value_of("notes_per_row").unwrap().parse().unwrap();
-                let spacing: usize = ARGS.value_of("spacing").unwrap().parse().unwrap();
-                if output_format == "rows"
+                Ok(config) =>
                 {
-                    fingering_chart.output_rows(output_path, notes_per_row, spacing)?
+                    let fingering_chart = Song::load(&midi_file, &config.transposition);
+                    match config.output_format
+                    {
+                        OutputFormat::Tracks => fingering_chart.output_entire(&config.output_path, config.notes_per_row, config.spacing)?,
+                        OutputFormat::Rows => fingering_chart.output_rows(&config.output_path, config.notes_per_row, config.spacing)?,
+                        OutputFormat::Separate => fingering_chart.output_cells(&config.output_path)?
+                    }
+                    // println!("{}", fingering_chart)
                 }
-                else
-                {
-                    fingering_chart.output_entire(output_path, notes_per_row, spacing)?
-                }
+                Err(e) => eprintln!("Failed to load config: {}", e)
             }
-            // println!("{}", fingering_chart)
-        },
-        None => 
-        {
-            eprintln!("Must specify a midi file path.")
         }
+        None => eprintln!("Error: No midi file detected.")
     }
     Ok(())
 }
@@ -288,7 +255,7 @@ macro_rules! define_notes
     {
         lazy_static!
         {
-            $( static ref $name: Note = Note::new($num, format!("{}/{}.png", ARGS.value_of("source_charts").unwrap(), stringify!($name))) );*;
+            $( static ref $name: Note = Note::new($num, format!("{}/{}.png", CONFIG.as_ref().unwrap().source_charts, stringify!($name))) );*;
         }
 
         impl Note
@@ -365,19 +332,5 @@ impl Display for Note
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result 
     {
         write!(f, "{}", self.name)
-    }
-}
-
-// Gets transposition from a string
-impl From<&str> for Transposition 
-{
-    fn from(string: &str) -> Self 
-    {
-        match string
-        {
-            "Bb" => Transposition::Bb,
-            "Eb" => Transposition::Eb,
-            _ => Transposition::C
-        }
     }
 }
