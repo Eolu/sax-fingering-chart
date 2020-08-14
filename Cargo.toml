@@ -3,6 +3,7 @@ name = "fingering_chart"
 version = "0.1.0"
 authors = ["Griffin O'Neill <gsoneill1003@gmail.com>"]
 edition = "2018"
+build = "res/build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,3 +13,6 @@ image = "0.23"
 lazy_static = "1.4"
 ron = "0.6"
 serde = "1.0"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
