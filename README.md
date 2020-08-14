@@ -3,9 +3,9 @@
 This program takes a MIDI file as input and generates fingering charts for saxophones matching the notes in that midi file. Time, note length, and other musical elements are not preserved, this is just a way to learn the fingering for each note.
 
 ## Usage   
-- fingering_chart.exe midi_file
+- fingering_chart.exe [midi_file...]
 
-Just drag a midi file onto `fingering_chart.exe`, you wait for charts to generate! You can also run it via the command-line by specifying a midi as shown above. Make sure the `cfg.ron` file is in the same directory as `fingering_chart.exe`. See below for additional settings.
+Just drag a midi file onto `fingering_chart.exe`, you wait for charts to generate! You can also run it via the command-line by specifying one or more midi files as shown above. Make sure the `cfg.ron` file is in the same directory as `fingering_chart.exe`. See below for additional settings.
 
 ### cfg.ron
 cfg.ron is the configuration file. See below for a list of each setting:
