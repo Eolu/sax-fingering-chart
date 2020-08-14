@@ -11,6 +11,7 @@ repository = "https://github.com/Eolu/sax-fingering-chart"
 homepage = "https://github.com/Eolu/sax-fingering-chart"
 readme = "README.md"
 build = "res/build.rs"
+exclude = ["examples/*"]
 
 [dependencies]
 midly = "0.4"
