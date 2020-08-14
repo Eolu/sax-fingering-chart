@@ -148,7 +148,7 @@ impl Song
                 .filter_map(|event| if let Midi { channel: _, message: NoteOn {key, vel: _} } = event.kind { Note::get(key, transposition, &mut notes) } else { None })
                 .collect::<Vec<&Note>>())
             .filter_map(|notes| if notes.is_empty() { None } else { Some(Track{notes}) })
-            .collect::<Vec<Track>>()}
+            .collect()}
     }
 
     /// Output chart with each cell as an individual file
