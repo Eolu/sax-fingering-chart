@@ -5,7 +5,7 @@ This program takes a MIDI file as input and generates fingering charts for saxop
 ## Usage   
 - fingering_chart.exe [midi_file...]
 
-Just drag a midi file onto `fingering_chart.exe`, you wait for charts to generate! You can also run it via the command-line by specifying one or more midi files as shown above. Make sure the `cfg.ron` file is in the same directory as `fingering_chart.exe`. See below for additional settings.
+Just drag a midi file (assuming you use an OS that supports that, eg Windows) onto `fingering_chart`, and wait for charts to generate! You can also run it via the command-line by specifying one or more midi files as shown above. Make sure the `cfg.ron` file is in the same directory as `fingering_chart`. See below for additional settings.
 
 ### cfg.ron
 cfg.ron is the configuration file:
