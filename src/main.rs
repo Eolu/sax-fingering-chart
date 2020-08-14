@@ -5,7 +5,7 @@ extern crate lazy_static;
 
 use ron::de::from_str;
 use serde::Deserialize;
-use std::{fs, collections::HashSet, env};
+use std::{fs, collections::HashSet, env, path::Path};
 use midly::{Smf, EventKind::*, MidiMessage::*, number::u7};
 use image::{DynamicImage, GenericImageView, GenericImage, error::ImageError};
 
@@ -87,26 +87,24 @@ struct Config
 /// Entry-point
 fn main() -> Result<(), ImageError>
 {
-    match env::args().skip(1).next()
+    match &*CONFIG
     {
-        Some(midi_file) => 
+        Ok(config) =>
         {
-            match &*CONFIG
+            for midi_file in env::args().skip(1)
             {
-                Ok(config) =>
+                let fingering_chart = Song::load(&midi_file, &config.transposition);
+                let dir_name = Path::new(&midi_file).file_stem().unwrap().to_string_lossy();
+                let output_path = format!("{}/{}", config.output_path, dir_name);
+                match config.output_format
                 {
-                    let fingering_chart = Song::load(&midi_file, &config.transposition);
-                    match config.output_format
-                    {
-                        OutputFormat::Tracks => fingering_chart.output_entire(&config.output_path, config.notes_per_row, config.spacing)?,
-                        OutputFormat::Rows => fingering_chart.output_rows(&config.output_path, config.notes_per_row, config.spacing)?,
-                        OutputFormat::Separate => fingering_chart.output_cells(&config.output_path)?
-                    }
+                    OutputFormat::Tracks => fingering_chart.output_entire(&output_path, config.notes_per_row, config.spacing)?,
+                    OutputFormat::Rows => fingering_chart.output_rows(&output_path, config.notes_per_row, config.spacing)?,
+                    OutputFormat::Separate => fingering_chart.output_cells(&output_path)?
                 }
-                Err(e) => eprintln!("Failed to load config: {}", e)
             }
         }
-        None => eprintln!("Error: No midi file detected.")
+        Err(e) => eprintln!("Failed to load config: {}", e)
     }
     Ok(())
 }
@@ -245,7 +243,16 @@ impl Track
     }
 }
 
-/// Macro to load notes using lazy_static
+impl Note
+{
+    /// Note constructor
+    fn new(byte: u8, image_path: String) -> Note
+    {
+        Note { byte, image: image::open(&image_path).expect(&format!("Failed to read {}", image_path)) }
+    }
+}
+
+/// Macro to define notes and load note images using lazy_static
 #[macro_export]
 macro_rules! define_notes
 {
@@ -258,11 +265,6 @@ macro_rules! define_notes
 
         impl Note
         {
-            fn new(byte: u8, image_path: String) -> Note
-            {
-                Note { byte, image: image::open(&image_path).expect(&format!("Failed to read {}", image_path)) }
-            }
-
             /// Access a note via it's midi byte index.
             fn get(index: u7, transposition: &Transposition, notes: &mut HashSet<u8>) -> Option<&'static Note>
             {
