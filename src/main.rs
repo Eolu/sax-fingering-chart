@@ -93,7 +93,7 @@ fn main() -> Result<(), ImageError>
         {
             for midi_file in env::args().skip(1)
             {
-                let fingering_chart = Song::load(&midi_file, &config.transposition);
+                let fingering_chart = Song::load(&midi_file, config.transposition);
                 let dir_name = Path::new(&midi_file).file_stem().unwrap().to_string_lossy();
                 let output_path = format!("{}/{}", config.output_path, dir_name);
                 match config.output_format
@@ -131,7 +131,7 @@ pub struct Note
 impl Song
 {
     /// Parse a midi file. Generate a list containing all tracks. Tracks themselves are simply lists of notes.
-    pub fn load(midi_path: &str, transposition: &Transposition) -> Song
+    pub fn load(midi_path: &str, transposition: Transposition) -> Song
     {
         // Parse a midi file
         let raw_data = fs::read(midi_path).expect("Failed to load midi data");
@@ -266,9 +266,9 @@ macro_rules! define_notes
         impl Note
         {
             /// Access a note via it's midi byte index.
-            fn get(index: u7, transposition: &Transposition, notes: &mut HashSet<u8>) -> Option<&'static Note>
+            fn get(index: u7, transposition: Transposition, notes: &mut HashSet<u8>) -> Option<&'static Note>
             {
-                match (index.as_int() + *transposition as u8)
+                match (index.as_int() + transposition as u8)
                 {
                     $(i if i == $name.byte => Some(&$name)),*,
                     i => 
