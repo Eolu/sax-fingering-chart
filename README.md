@@ -2,6 +2,8 @@
 
 This program takes a MIDI file as input and generates fingering charts for saxophones matching the notes in that midi file. Time, note length, and other musical elements are not preserved, this is just a way to learn the fingering for each note.
 
+Fingerings are decided bya simple weighted algorithm that tries to pick fingerings for a note based the keys involved in the previous and next note. There may be a better way to do this, I'm open to ideas.
+
 ## Usage   
 - fingering_chart [midi_file...]
 
@@ -17,7 +19,6 @@ cfg.ron is the configuration file:
 - `notes_per_row` Sets the number of notes per row. Not applicable when using `Separate` output format.
 
 ## Planned Features   
-- Alternate fingerings. Right now a single fingering is used per note, and it may not necessarily be the optimal choice given the song. I'm considering adding some logic that takes the previous/next note into account to decide which fingering to show on the chart.
 - Fingerings for altissimo/trill
 - Detect if a midi file has notes out of range, have an option to automatically attempt to transpose the midi file to fit in the sax range (by octave first, then by semitone). Currently notes out of range are just left out with a warning
 
