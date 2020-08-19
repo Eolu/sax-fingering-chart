@@ -4,7 +4,7 @@
 
 - Added logic which tries to make vaguely intelligent decisions about which fingering chart to pick. It checks the fingering before and after,
 and tries to pick one with more keys in common to its neighbors.
-- To support the above change, added another configuration file that gives youy some control over notes. Not well-documented yet, but that's coming soon.
+- To support the above change, added another configuration file that gives some control over notes. Not well-documented yet, but that's coming soon.
 - Code refactoring to handle the increasing size of this project.
 
 #### Future plans:

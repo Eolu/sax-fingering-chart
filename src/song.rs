@@ -67,9 +67,9 @@ impl Song
         {
             let track_path = format!("{}/track{}", output_path, i);
             fs::create_dir_all(&track_path)?;
-            for (cell, note) in track.notes().iter().enumerate() 
+            for (cell, image) in track.cell_images().enumerate() 
             {
-                note.image.save(format!("{}/{}.png", track_path, cell))?;
+                image.save(format!("{}/{}.png", track_path, cell))?;
             }
         }
         Ok(())
@@ -136,74 +136,50 @@ impl Song
                         .map(|note|*note)
                         .map(|candidate|candidate.keys)
                         .map(|keys|note.keys.symmetrical_difference(keys).len())
-                        .max()
+                        .min()
                         .unwrap() as i32
                 }
 
-                if choices.len() == 1
+                // Take two candidates notes and one or more others to compare against, determine which note is closer.
+                // Note 1 is favored slightly in that it will be used in the case of equivalence
+                fn compare_notes<'a>(note_1: &'static Note, note_2: &'static Note, siblings: &Vec<&'static Note>) -> &'static Note
                 {
-                    previous_choice = Some(choices[0]);
+                    let note_1_intersection = intersection(note_1, siblings.iter());
+                    let note_1_diff = difference(note_1, siblings.iter());
+                    let note_2_intersection = intersection(note_2, siblings.iter());
+                    let note_2_diff = difference(note_2, siblings.iter());
+                    if note_2_intersection - note_2_diff > note_1_intersection - note_1_diff
+                    {
+                        note_2
+                    }
+                    else
+                    {
+                        note_1
+                    }
+                }
+
+                // Determine what fingering to actually use
+                previous_choice = Some(if choices.len() == 1
+                {
+                    choices[0]
                 }
                 else if i == 0
                 {
-                    let next = &candidates[i + 1];
-                    previous_choice = Some(choices.iter().fold(choices[0], |note_1, note_2| 
-                    {
-                        let note_1_intersection = intersection(note_1, next.iter());
-                        let note_1_diff = difference(note_1, next.iter());
-                        let note_2_intersection = intersection(note_2, next.iter());
-                        let note_2_diff = difference(note_2, next.iter());
-                        if note_2_intersection - note_2_diff > note_1_intersection - note_1_diff
-                        {
-                            note_2
-                        }
-                        else
-                        {
-                            note_1
-                        }
-                    }));
+                    choices.iter().fold(choices[0], |note_1, note_2| compare_notes(note_1, note_2, &candidates[i + 1]))
                 }
                 else if i == candidates.len() - 1
                 {
-                    previous_choice = Some(choices.iter().fold(choices[0], |note_1, note_2| 
-                    {
-                        let note_1_intersection = intersection(note_1, previous_choice.iter());
-                        let note_1_diff = difference(note_1, previous_choice.iter());
-                        let note_2_intersection = intersection(note_2, previous_choice.iter());
-                        let note_2_diff = difference(note_2, previous_choice.iter());
-                        if note_2_intersection - note_2_diff > note_1_intersection - note_1_diff
-                        {
-                            note_2
-                        }
-                        else
-                        {
-                            note_1
-                        }
-                    }));
+                    let sibling = vec!(previous_choice.unwrap());
+                    choices.iter().fold(choices[0], |note_1, note_2| compare_notes(note_1, note_2, &sibling))
                 }
                 else
                 {
-                    let next = &candidates[i + 1];
-                    previous_choice = Some(choices.iter().fold(choices[0], |note_1, note_2| 
-                    {
-                        let note_1_intersection = 
-                        intersection(note_1, next.iter()) + intersection(note_1, previous_choice.iter());
-                        let note_1_diff = 
-                        difference(note_1, next.iter()) + difference(note_1, previous_choice.iter());
-                        let note_2_intersection = 
-                        intersection(note_2, next.iter()) + intersection(note_2, previous_choice.iter());
-                        let note_2_diff = 
-                        difference(note_2, next.iter()) + difference(note_2, previous_choice.iter());
-                        if note_2_intersection - note_2_diff > note_1_intersection - note_1_diff
-                        {
-                            note_2
-                        }
-                        else
-                        {
-                            note_1
-                        }
-                    }));
-                }
+                    let mut siblings = candidates[i + 1].clone();
+                    siblings.push(previous_choice.unwrap());
+                    choices.iter().fold(choices[0], |note_1, note_2| compare_notes(note_1, note_2, &siblings))
+                });
+
+                // Return the choice made above (it's actually the "current_choice" at this point)
                 previous_choice
             })
             .collect()
@@ -222,7 +198,7 @@ impl Track
             let new_width = std::cmp::max(previous.width(), row_image.width());
             let new_height = previous.height() + row_image.height() + spacing as u32;
             track_image = DynamicImage::new_rgb8(new_width, new_height);
-            track_image.copy_from(&previous, 0, 0).expect("Failed to regenerate track image");
+            track_image.copy_from(&previous, 0, 0).expect("Failed to copy track image");
             track_image.copy_from(&row_image, 0, previous.height()).expect("Failed to generate track image");
         }
         track_image
@@ -244,7 +220,7 @@ impl Track
                     let new_width = previous.width() + note.image.width() + spacing as u32;
                     let new_height = std::cmp::max(previous.height(), note.image.height());
                     row_image = DynamicImage::new_rgb8(new_width, new_height);
-                    row_image.copy_from(&previous, 0, 0).expect("Failed to regenerate row image");
+                    row_image.copy_from(&previous, 0, 0).expect("Failed to copy row image");
                     row_image.copy_from(&note.image, previous.width(), 0).expect("Failed to generate row image");
                 }
                 row_image
@@ -253,7 +229,6 @@ impl Track
 
     /// Returns an iterator into cell images. The images themselves are 
     /// generated at load-time, so this method is low-cost.
-    #[allow(dead_code)]
     pub fn cell_images(&self) -> impl Iterator<Item = &DynamicImage>
     {
         self.notes().iter().map(|note| &note.image)

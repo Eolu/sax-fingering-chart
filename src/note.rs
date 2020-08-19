@@ -1,7 +1,6 @@
 use Key::*;
+use enumset::*;
 use crate::{define_notes, CONFIG};
-
-pub use enumset::*;
 
 /// Struct used for individual notes
 pub struct Note
