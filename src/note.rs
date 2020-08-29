@@ -1,16 +1,26 @@
 use Key::*;
 use enumset::*;
+use std::collections::HashMap;
 use crate::{define_notes, CONFIG};
+
+/// Type alias for note constants
+pub type NoteConst = &'static Note;
 
 /// Struct used for individual notes
 pub struct Note
 {
     pub byte: u8,
+    pub fingerings: Vec<Fingering>
+}
+
+/// Struct used for individual fingering charts, may be multiple per note
+pub struct Fingering
+{
     pub keys: EnumSet<Key>,
     pub image: image::DynamicImage
 }
 
-#[derive(EnumSetType)]
+#[derive(EnumSetType, Debug)]
 pub enum Key
 {
     Octave,
@@ -46,44 +56,62 @@ pub enum Key
 // representation of individual keys.
 
 // Note constants are defined in a separate file
-include!("keys.in");
+include!("keys.cfg");
 
 /// Macro to define notes and load note images using lazy_static
 #[macro_export]
 macro_rules! define_notes
 {
-    ($($name: ident, $num: literal, 
-    {
-        $($key: ident),*
-    })*) => 
+    (
+        $(
+            $name:literal $num: literal
+            {
+                $($key: ident),*
+            }
+        )*
+    ) => 
     {
         lazy_static!
         {
-            $( pub static ref $name: Note = Note::new
-                ( 
-                    $num, 
-                    enum_set!($($key)|*),
-                    format!("{}/{}.png", CONFIG.as_ref().unwrap().source_charts, stringify!($name))
-                ) 
-            );*;
-
-            /// Vec containing all loaded notes
-            pub static ref NOTES: Vec<&'static Note> = vec!($(&$name),*);
+            /// Map of loaded note constants
+            pub static ref NOTES: HashMap<u8, Note> = 
+            {
+                let mut notes: HashMap<u8, Note> = HashMap::new();
+                $(
+                    let fingering = Fingering::new(enum_set!($($key)|*), format!("{}/{}", CONFIG.as_ref().unwrap().source_charts, $name));
+                    match notes.get_mut(&$num)
+                    {
+                        None => 
+                        {
+                            notes.insert($num, Note { byte: $num, fingerings: vec!(fingering) });
+                        },
+                        Some(note) => 
+                        {
+                            note.fingerings.push(fingering);
+                        }
+                    };
+                )*
+                notes
+            };
         }
     }
 }
 
 impl Note
 {
-    /// Note constructor
-    pub fn new(byte: u8, keys: EnumSet<Key>, image_path: String) -> Note
-    {
-        Note { byte, keys, image: image::open(&image_path).expect(&format!("Failed to read {}", image_path)) }
-    }
-
     /// Access a note via it's midi byte index.
-    pub fn get(key: u8) -> Vec<&'static Note>
+    pub fn get(byte: u8) -> Option<NoteConst>
     {
-        NOTES.iter().map(|note|*note).filter(|note| note.byte == key).collect()
+        NOTES.get(&byte)
     }
+}
+
+impl Fingering
+{
+    /// Fingering contructor
+    pub fn new(keys: EnumSet<Key>, image_path: String) -> Fingering
+    {
+        Fingering { keys, image: image::open(&image_path).expect(&format!("Failed to read {}", image_path)) }
+    }
+    
 }

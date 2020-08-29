@@ -5,7 +5,11 @@ extern crate lazy_static;
 
 #[macro_use]
 mod note;
+mod track;
 mod song;
+
+#[cfg(test)]
+mod tests;
 
 use song::*;
 use ron::de::from_str;

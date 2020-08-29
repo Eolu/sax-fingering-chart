@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.3] - 8/29/2020
+
+- Fingering decision logic slightly simplified.
+- More refactoring and began adding some tests.
+- Added some useful documention inside keys.cfg.
+
 ## [0.1.2] - 8/19/2020
 
 - Added logic which tries to make vaguely intelligent decisions about which fingering chart to pick. It checks the fingering before and after,

@@ -2,7 +2,7 @@
 
 This program takes a MIDI file as input and generates fingering charts for saxophones matching the notes in that midi file. Time, note length, and other musical elements are not preserved, this is just a way to learn the fingering for each note.
 
-Fingerings are decided bya simple weighted algorithm that tries to pick fingerings for a note based the keys involved in the previous and next note. There may be a better way to do this, I'm open to ideas.
+Fingerings are decided by a simple weighted algorithm that picks fingerings for a note based the keys involved in the previous and next note. There may be a better way to do this, I'm open to ideas.
 
 ## Usage   
 - fingering_chart [midi_file...]

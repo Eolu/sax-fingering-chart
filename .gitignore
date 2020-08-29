@@ -1,5 +1,6 @@
 /target
 /out
+/releases
 res/midi.png
 *.zip
 *.exe
