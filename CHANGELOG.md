@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.4] - 9/5/2020
+## [0.2.0] - 9/5/2020
 
 - Charts arte now much less busy, opting to not show notes when they aren't relevant to a fingering. The octave key and 6 front keys are always shown.
 - Fingering charts are now 100% precedurally generated. No more archives of chart files! Releases will be a single executable with a config file.

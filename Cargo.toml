@@ -1,6 +1,6 @@
 [package]
 name = "sax-fingering-chart"
-version = "0.1.4"
+version = "0.2.0"
 license = "MIT"
 description = "Takes midi files and outputs fingering charts for a saxophone."
 authors = ["Griffin O'Neill <gsoneill1003@gmail.com>"]
