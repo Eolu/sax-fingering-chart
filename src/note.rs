@@ -1,6 +1,5 @@
 use enumset::EnumSet;
 use std::collections::HashMap;
-use image::{GenericImageView, imageops::FilterType};
 use crate::keys::Key;
 use crate::CONFIG;
 
@@ -77,7 +76,6 @@ impl Fingering
     {
         let mut image = Fingering::gen_chart(keys);
         Note::include_note_name(byte, &mut image);
-        image.resize(image.width() * 2, image.height() * 2, FilterType::Nearest);
         Fingering { keys, image }
     }
 }

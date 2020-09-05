@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.1] - 9/5/2020
+
+- Realized charts were generating at 50% size right after publishing 2.0. Here's the fix.
+
 ## [0.2.0] - 9/5/2020
 
 - Charts arte now much less busy, opting to not show notes when they aren't relevant to a fingering. The octave key and 6 front keys are always shown.

@@ -1,7 +1,7 @@
 use crate::{track::*, note::{Note, NoteConst}, Transposition};
 use std::{fs, collections::HashSet};
 use midly::{Smf, EventKind::*, MidiMessage::*};
-use image::{error::ImageError};
+use image::{error::ImageError, GenericImageView, imageops::FilterType};
 
 /// Entire song, just a vec of tracks with some methods
 pub struct Song(Vec<Track>);
@@ -67,6 +67,7 @@ impl Song
             fs::create_dir_all(&track_path)?;
             for (cell, image) in track.cell_images().iter().enumerate()
             {
+                let image = image.resize(image.width() * 2, image.height() * 2, FilterType::Nearest);
                 image.save(format!("{}/{}.png", track_path, cell))?;
             }
         }
@@ -82,6 +83,7 @@ impl Song
             fs::create_dir_all(&track_path)?;
             for (row, image) in track.row_images(notes_per_row, spacing).iter().enumerate() 
             {
+                let image = image.resize(image.width() * 2, image.height() * 2, FilterType::Nearest);
                 image.save(format!("{}/row{}.png", track_path, row))?;
             }
         }
@@ -94,9 +96,9 @@ impl Song
         fs::create_dir_all(output_path)?;
         for (i, track) in self.tracks().enumerate()
         {
-            track
-                .track_image(notes_per_row, spacing)
-                .save(format!("{}/track{}.png", output_path, i))?;
+            let image = track.track_image(notes_per_row, spacing);
+            let image = image.resize(image.width() * 2, image.height() * 2, FilterType::Nearest);
+            image.save(format!("{}/track{}.png", output_path, i))?;
         }
         Ok(())
     }

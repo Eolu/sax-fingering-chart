@@ -1,6 +1,7 @@
 /target
 /out
 /releases
+/fingerings
 res/midi.png
 *.zip
 *.exe
