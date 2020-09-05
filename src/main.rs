@@ -5,6 +5,7 @@ extern crate lazy_static;
 
 #[macro_use]
 mod note;
+mod keys;
 mod track;
 mod song;
 
@@ -14,8 +15,10 @@ mod tests;
 use song::*;
 use ron::de::from_str;
 use serde::Deserialize;
-use std::{env, path::Path};
+use std::{env, path::Path, collections::BTreeMap};
 use image::{error::ImageError};
+use enumset::*;
+use keys::Key;
 
 // Load configuration before executing main program
 lazy_static!
@@ -46,14 +49,14 @@ pub enum OutputFormat
 
 /// Data from the loaded cfg.ron file.
 #[derive(Deserialize)]
-struct Config 
+pub struct Config 
 {
-    source_charts: String,
     transposition: Transposition,
     output_path: String,
     output_format: OutputFormat,
     spacing: usize,
-    notes_per_row: usize
+    notes_per_row: usize,
+    notes: BTreeMap<u8, Vec<EnumSet<Key>>> 
 }
 
 /// Entry-point

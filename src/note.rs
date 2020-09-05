@@ -1,7 +1,8 @@
-use Key::*;
-use enumset::*;
+use enumset::EnumSet;
 use std::collections::HashMap;
-use crate::{define_notes, CONFIG};
+use image::{GenericImageView, imageops::FilterType};
+use crate::keys::Key;
+use crate::CONFIG;
 
 /// Type alias for note constants
 pub type NoteConst = &'static Note;
@@ -20,81 +21,44 @@ pub struct Fingering
     pub image: image::DynamicImage
 }
 
-#[derive(EnumSetType, Debug)]
-pub enum Key
+// Define notes and load note images using lazy_static
+lazy_static!
 {
-    Octave,
-    Left1,
-    Left2,
-    Left3,
-    FrontF,
-    Bis,
-    PalmD,
-    PalmEflat,
-    PalmF,
-    Gsharp,
-    LowCsharp,
-    LowB,
-    LowBflat,
-    Right1,
-    Right2,
-    Right3,
-    Fsharp,
-    SideE,
-    SideC,
-    SideBis,
-    HighF,
-    LowEflat,
-    LowC,
-    // Baritone only, not yet supported
-    LowA
-}
-
-// TODO: Consider generating key images at runtime,
-// as at this point we have all the info we need to
-// make it happen! Just store images of the visual
-// representation of individual keys.
-
-// Note constants are defined in a separate file
-include!("keys.cfg");
-
-/// Macro to define notes and load note images using lazy_static
-#[macro_export]
-macro_rules! define_notes
-{
-    (
-        $(
-            $name:literal $num: literal
-            {
-                $($key: ident),*
-            }
-        )*
-    ) => 
+    /// Map of loaded note constants
+    pub static ref NOTES: HashMap<u8, Note> = 
     {
-        lazy_static!
+        match &*CONFIG
         {
-            /// Map of loaded note constants
-            pub static ref NOTES: HashMap<u8, Note> = 
+            Ok(config) => 
             {
                 let mut notes: HashMap<u8, Note> = HashMap::new();
-                $(
-                    let fingering = Fingering::new(enum_set!($($key)|*), format!("{}/{}", CONFIG.as_ref().unwrap().source_charts, $name));
-                    match notes.get_mut(&$num)
+                for (byte, fingerings) in &config.notes
+                {
+                    let fingerings = fingerings
+                        .into_iter()
+                        .map(|&enumset| Fingering::new(enumset, *byte))
+                        .collect();
+                    match notes.get_mut(&byte)
                     {
                         None => 
                         {
-                            notes.insert($num, Note { byte: $num, fingerings: vec!(fingering) });
+                            notes.insert(*byte, Note { byte: *byte, fingerings });
                         },
                         Some(note) => 
                         {
-                            note.fingerings.push(fingering);
+                            note.fingerings.extend(fingerings);
                         }
                     };
-                )*
+                }
                 notes
-            };
+            },
+            Err(e) => 
+            {
+                eprintln!("Failed to load config: {}", e);
+                HashMap::new()
+            }
         }
-    }
+    };
 }
 
 impl Note
@@ -109,9 +73,11 @@ impl Note
 impl Fingering
 {
     /// Fingering contructor
-    pub fn new(keys: EnumSet<Key>, image_path: String) -> Fingering
+    pub fn new(keys: EnumSet<Key>, byte: u8) -> Fingering
     {
-        Fingering { keys, image: image::open(&image_path).expect(&format!("Failed to read {}", image_path)) }
+        let mut image = Fingering::gen_chart(keys);
+        Note::include_note_name(byte, &mut image);
+        image.resize(image.width() * 2, image.height() * 2, FilterType::Nearest);
+        Fingering { keys, image }
     }
-    
 }

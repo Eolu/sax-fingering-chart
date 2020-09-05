@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.4] - 9/5/2020
+
+- Charts arte now much less busy, opting to not show notes when they aren't relevant to a fingering. The octave key and 6 front keys are always shown.
+- Fingering charts are now 100% precedurally generated. No more archives of chart files! Releases will be a single executable with a config file.
+- Got rid of a silly note-loading macro that was almost certainly a bad idea from the start. Now using the magic of ron and serde. You can edit the configuration file to add more notes as well as modify the fingering of existing notes!
+
+#### Future plans:
+- Still gives up if config file is not present, considering solutions (eg generating a default if it's not there).
+
 ## [0.1.3] - 8/29/2020
 
 - Fingering decision logic slightly simplified.
