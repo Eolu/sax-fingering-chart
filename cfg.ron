@@ -1,7 +1,8 @@
 Config
 (
-    // The transposition. Supported values are: C, Bb, Eb
-    transposition: Bb,
+    // The sax type. Supported values are: Alto, Tenor, Baritone, Soprano, Bass, CMelody, Contrabass, 
+    // Sopranino, Subcontrabass, and Sopranissimo. This is used only for note transposition.
+    transposition_type: Tenor,
 
     // The output path. If this is a non-existent directory, will attempt to create.
     output_path: "./out",
@@ -15,7 +16,7 @@ Config
     spacing: 10,
 
     // The number of notes per row. Not applicable when using `Separate` output format.
-    notes_per_row: 14,
+    notes_per_row: 18,
 
     /*
     The last field defines the fingerings for each individual note. The actual note images are generated 
@@ -30,7 +31,8 @@ Config
     Fsharp,     SideE,    SideC,     SideBis,
     HighFsharp, LowEflat, LowC,      LowA
 
-    And the following is a chart containing the midi byte constant for each note:
+    And the following is a chart containing the midi byte constant for each note (may not look right if
+    not using a monospaced font):
     ┏━━━━━━━━┳━━━━━┳━━━━━━━┳━━━━━┳━━━━━━━┳━━━━━┳━━━━━┳━━━━━━━┳━━━━━┳━━━━━━━┳━━━━━┳━━━━━━━┳━━━━━┓
     ┃ Octave ┃  C  ┃ Cs/Db ┃  D  ┃ Ds/Eb ┃  E  ┃  F  ┃ Fs/Gb ┃  G  ┃ Gs/Ab ┃  A  ┃ As/Bb ┃  B  ┃
     ┡━━━━━━━━╇━━━━━╇━━━━━━━╇━━━━━╇━━━━━━━╇━━━━━╇━━━━━╇━━━━━━━╇━━━━━╇━━━━━━━╇━━━━━╇━━━━━━━╇━━━━━┩
@@ -57,7 +59,6 @@ Config
     │   9    │ 120 │  121  │ 122 │  123  │ 124 │ 125 │  126  │ 127 │       │     │       │     │
     └────────┴─────┴───────┴─────┴───────┴─────┴─────┴───────┴─────┴───────┴─────┴───────┴─────┘
     */
-    
     notes:
     {
         46: // Bb2

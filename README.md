@@ -12,7 +12,7 @@ Just open a midi file with `fingering_chart`, and wait for charts to generate! Y
 
 ### cfg.ron
 cfg.ron is the configuration file:
-- `transposition` Sets the transposition. May use `C`, `Bb`, or `Eb`.
+- `transposition_type` Sets the transposition. May use `Alto`, `Tenor`, `Baritone`, `Soprano`, `Bass`, `CMelody`, `Contrabass`, `Sopranino`, `Subcontrabass`, and `Sopranissimo`.
 - `output_path` Sets the output path. If this is a non-existent directory, will attempt to create.
 - `output_format` Sets the output format. May use `Tracks`, `Rows`, or `Separate`. `Tracks` outputs charts for each midi track as a single file. `Rows` splits tracks up into multiple files each containing a horizontal row of notes. `Separate` outputs each individual note as a separate file.
 - `spacing` Sets the visual spacing between consecutive notes. Not applicable when using `Separate` output format.

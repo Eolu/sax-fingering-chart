@@ -1,4 +1,3 @@
-#![allow(non_upper_case_globals)]
 
 #[macro_use]
 extern crate lazy_static;
@@ -31,11 +30,18 @@ lazy_static!
 
 /// The note transposition to use, supports saxes of any kind
 #[derive(Copy, Clone, Deserialize)]
-pub enum Transposition
+pub enum TranspositionType
 {
-    C = 0,
-    Bb = 2,
-    Eb = -3
+    Sopranissimo = -22,
+    Sopranino = -15,
+    Soprano = -10,
+    Alto = -3,
+    CMelody = 0,
+    Tenor = 2,
+    Baritone = 9,
+    Bass = 14,
+    Contrabass = 21,
+    Subcontrabass = 26
 }
 
 /// The output format, determines how the chart images are layed out.
@@ -51,7 +57,7 @@ pub enum OutputFormat
 #[derive(Deserialize)]
 pub struct Config 
 {
-    transposition: Transposition,
+    transposition_type: TranspositionType,
     output_path: String,
     output_format: OutputFormat,
     spacing: usize,
@@ -68,7 +74,7 @@ fn main() -> Result<(), ImageError>
         {
             for midi_file in env::args().skip(1)
             {
-                let fingering_chart = Song::load(&midi_file, config.transposition);
+                let fingering_chart = Song::load(&midi_file, config.transposition_type as u8);
                 let dir_name = Path::new(&midi_file).file_stem().unwrap().to_string_lossy();
                 let output_path = format!("{}/{}", config.output_path, dir_name);
                 match config.output_format

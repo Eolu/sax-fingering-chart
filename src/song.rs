@@ -1,4 +1,4 @@
-use crate::{track::*, note::{Note, NoteConst}, Transposition};
+use crate::{track::*, note::{Note, NoteConst}};
 use std::{fs, collections::HashSet};
 use midly::{Smf, EventKind::*, MidiMessage::*};
 use image::{error::ImageError, GenericImageView, imageops::FilterType};
@@ -9,7 +9,7 @@ pub struct Song(Vec<Track>);
 impl Song
 {
     /// Parse a midi file. Generate a list containing all tracks. Tracks themselves are simply lists of notes.
-    pub fn load(midi_path: &str, transposition: Transposition) -> Song
+    pub fn load(midi_path: &str, transposition: u8) -> Song
     {
         // Parse a midi file
         let raw_data = fs::read(midi_path).expect("Failed to load midi data");
@@ -26,7 +26,7 @@ impl Song
                 .filter_map(|event| 
                     if let Midi { channel: _, message: NoteOn {key, vel: _} } = event.kind 
                     { 
-                        let true_key = key.as_int() + transposition as u8;
+                        let true_key = key.as_int() + transposition;
                         let candidates = Note::get(true_key);
                         match candidates
                         {

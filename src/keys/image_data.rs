@@ -3,6 +3,7 @@ use crate::note::Note;
 use image::{DynamicImage, GenericImage, Rgba};
 use std::cmp::max;
 
+// Various color constants used in chart generation
 pub const BLACK: Rgba::<u8> = Rgba([0,0,0,255]);
 pub const TRANSPARENT: Rgba::<u8> = Rgba([255,255,255,0]);
 pub const GREY: Rgba::<u8> = Rgba([128,128,128,255]);
@@ -11,11 +12,17 @@ pub const OCTAVE_3_COLOR: Rgba::<u8> = Rgba([97,90,199,255]);
 pub const OCTAVE_4_COLOR: Rgba::<u8> = Rgba([184,94,191,255]);
 pub const OCTAVE_5_COLOR: Rgba::<u8> = Rgba([76,158,91,255]);
 
+/// The size of charts, in pixels. The actual charts output may multiply this by a whole-number factor
 pub const CHART_SIZE: (u8,u8) = (63, 118);
+/// The pixel location of the note-name on the chart
 pub const NAME_LOCATION: (u8,u8) = (41,104);
+/// The pixel location of the flat symbol that goes next to the note-name
 pub const FLAT_LOCATION: (u8,u8) = (51,104);
+/// The pixel location of horizontal separator between front keys
 pub const SEP_LOCATION: (u8,u8) = (20,65);
 
+// Generated images. These are lazy_static rather than const, although finding a way to make these const
+// may be an interesting exploration.
 lazy_static!
 {
     pub static ref SEPARATOR: DynamicImage = gen_name_image(&SEPARATOR_COORDS, GREY);
@@ -153,7 +160,7 @@ fn gen_key_image(outside_coords: &[(u32, u32)], border_coords: &[(u32, u32)], fi
 /// Generates a key name image
 fn gen_name_image(coords: &[(u32, u32)], color: Rgba<u8>) -> DynamicImage
 {
-    let (width, height) = coords.iter().fold((0,0), |(x,y), (cur_x, cur_y)| (max(x, 1 + *cur_x), max(y, 1 + *cur_y)));
+    let (width, height) = coords.iter().fold((0,0), |(x, y), (cur_x, cur_y)| (max(x, 1 + *cur_x), max(y, 1 + *cur_y)));
     let mut image: DynamicImage = DynamicImage::new_rgba8(width, height);
     for x in 0..width
     {
@@ -172,77 +179,46 @@ fn gen_name_image(coords: &[(u32, u32)], color: Rgba<u8>) -> DynamicImage
     image
 }
 
-// These constants are used to generate actual images of each element of the fingering chart
+// The constants below are used to generate actual images of each element of the fingering chart. Originally 
+// were pre-rendered pixel-art images for each fingering chart. The bare minimum information was stripped out
+// of each image to generate these constants, which allows much faster runtime generation of fingering charts.
 
+// Every key is defined by two constants: OUTSIDE_COORDS and BORDER_COORDS. OUTSIDE_COORDS defines the space
+// within the image that will never contain color information (transparent/white areas). BORDER_COORDS defines
+// the space which is greyed out when a key is drawn as inactive, and colored in when the key is drawn as active. 
+// All coordinates not represented by these constants are considered "inside coords" and will be uncolored when 
+// the key is drawn as inactive and colored in when the key is drawn as active.
 const FRONT_KEY_OUTSIDE_COORDS: [(u32, u32); 24] =
 [
-    (0,0), (1,0), (2,0),                             (7,0), (8,0), (9,0),
-    (0,1), (1,1),                                           (8,1), (9,1),
-    (0,2),                                                         (9,2),
-    (0,7),                                                         (9,7),
-    (0,8), (1,8),                                           (8,8), (9,8),
-    (0,9), (1,9), (2,9),                             (7,9), (8,9), (9,9),
+    (0,0), (1,0), (2,0), (7,0), (8,0), (9,0), (0,1), (1,1), (8,1), (9,1), (0,2), (9,2), (0,7), (9,7),
+    (0,8), (1,8), (8,8), (9,8), (0,9), (1,9), (2,9), (7,9), (8,9), (9,9),
 ];
 const FRONT_KEY_BORDER_COORDS: [(u32, u32); 24] =
 [
-                            (3,0), (4,0), (5,0), (6,0),
-                    (2,1),                             (7,1),
-            (1,2),                                           (8,2),
-    (0,3),                                                         (9,3),
-    (0,4),                                                         (9,4),
-    (0,5),                                                         (9,5),
-    (0,6),                                                         (9,6),
-            (1,7),                                           (8,7),
-                    (2,8),                             (7,8), 
-                        (3,9), (4,9), (5,9), (6,9),
+    (3,0), (4,0), (5,0), (6,0), (2,1), (7,1), (1,2), (8,2), (0,3), (9,3), (0,4), (9,4), (0,5), (9,5), (0,6), 
+    (9,6), (1,7), (8,7), (2,8), (7,8), (3,9), (4,9), (5,9), (6,9),
 ];
 const FRONT_F_KEY_OUTSIDE_COORDS: [(u32, u32); 12] =
 [
-    (0,0), (1,0),                                           (8,0), (9,0),
-    (0,1),                                                         (9,1),
-    (0,3),                                                         (9,3),
-    (0,4), (1,4),                                           (8,4), (9,4),
+    (0,0), (1,0), (8,0), (9,0), (0,1), (9,1), (0,3), (9,3), (0,4), (1,4), (8,4), (9,4),
 ];
 const FRONT_F_KEY_BORDER_COORDS: [(u32, u32); 18] =
 [
-                   (2,0), (3,0), (4,0), (5,0), (6,0), (7,0),
-            (1,1),                                           (8,1),
-    (0,2),                                                          (9,2),
-            (1,3),                                           (8,3),
-                   (2,4), (3,4), (4,4), (5,4), (6,4), (7,4),
+    (2,0), (3,0), (4,0), (5,0), (6,0), (7,0), (1,1), (8,1), (0,2), (9,2), (1,3), (8,3), (2,4), (3,4), 
+    (4,4), (5,4), (6,4), (7,4),
 ];
 const PALM_KEY_OUTSIDE_COORDS: [(u32, u32); 28] =
 [
-    (0,0),  (1,0),  (2,0),                           (5,0),  (6,0),  (7,0),
-    (0,1),  (1,1),                                           (6,1),  (7,1),
-    (0,2),                                                           (7,2),
-    (0,3),                                                           (7,3),
-    (0,11),                                                          (7,11),
-    (0,12),                                                          (7,12),
-    (0,13), (1,13),                                          (6,13), (7,13),
-    (0,14), (1,14), (2,14),                          (5,14), (6,14), (7,14),
+    (0,0), (1,0), (2,0), (5,0), (6,0), (7,0), (0,1), (1,1), (6,1), (7,1), (0,2), (7,2), (0,3), (7,3),
+    (0,11), (7,11), (0,12), (7,12), (0,13), (1,13), (6,13), (7,13), (0,14), (1,14), (2,14), (5,14), 
+    (6,14), (7,14),
 ];
 const PALM_KEY_BORDER_COORDS: [(u32, u32); 30] =
 [
-                           (3,0),  (4,0),
-                   (2,1),                   (5,1),
-            (1,2),                                 (6,2),
-            (1,3),                                 (6,3),
-    (0,4),                                                 (7,4),
-    (0,5),                                                 (7,5),
-    (0,6),                                                 (7,6),
-    (0,7),                                                 (7,7),
-    (0,8),                                                 (7,8),
-    (0,9),                                                 (7,9),
-    (0,10),                                                (7,10),
-            (1,11),                                 (6,11),
-            (1,12),                                 (6,12),
-                    (2,13),                 (5,13), 
-                            (3,14), (4,14),
+    (3,0), (4,0), (2,1), (5,1), (1,2), (6,2), (1,3), (6,3), (0,4), (7,4), (0,5), (7,5), (0,6), (7,6),
+    (0,7), (7,7), (0,8), (7,8), (0,9), (7,9), (0,10), (7,10), (1,11), (6,11), (1,12), (6,12), (2,13), 
+    (5,13), (3,14), (4,14),
 ];
-
-// From here on out I got "lazy" and machine-generated the rest
-
 const OCTAVE_KEY_OUTSIDE_COORDS: [(u32, u32); 230] =
 [
     (1,0), (2,0), (3,0), (4,0), (5,0), (6,0), (7,0), (8,0), (9,0), (10,0), (11,0), (12,0), (13,0), 
@@ -277,33 +253,27 @@ const OCTAVE_KEY_BORDER_COORDS: [(u32, u32); 83] =
 ];
 const BIS_OUTSIDE_COORDS: [(u32, u32); 12] =
 [
-
     (0,0), (1,0), (4,0), (5,0), (0,1), (5,1), (0,4), (5,4), (0,5), (1,5), (4,5), (5,5)
 ];
 const BIS_BORDER_COORDS: [(u32, u32); 12] =
 [
-
     (2,0), (3,0), (1,1), (4,1), (0,2), (5,2), (0,3), (5,3), (1,4), (4,4), (2,5), (3,5)
 ];
 const LOW_A_OUTSIDE_COORDS: [(u32, u32); 9] =
 [
-
     (2,0), (3,0), (4,0), (5,0), (6,0), (7,0), (8,0), (0,4), (10,4)
 ];
 const LOW_A_BORDER_COORDS: [(u32, u32); 26] =
 [
-
     (0,0), (1,0), (9,0), (10,0), (0,1), (2,1), (3,1), (4,1), (5,1), (6,1), (7,1), (8,1), (10,1), 
     (0,2), (10,2), (0,3), (10,3), (1,4), (2,4), (3,4), (4,4), (5,4), (6,4), (7,4), (8,4), (9,4)
 ];
 const SIDE_OUTSIDE_COORDS: [(u32, u32); 12] =
 [
-
     (0,0), (1,0), (3,0), (4,0), (0,1), (4,1), (0,8), (4,8), (0,9), (1,9), (3,9), (4,9)
 ];
 const SIDE_BORDER_COORDS: [(u32, u32); 18] =
 [
-
     (2,0), (1,1), (3,1), (0,2), (4,2), (0,3), (4,3), (0,4), (4,4), (0,5), (4,5), (0,6), (4,6), 
     (0,7), (4,7), (1,8), (3,8), (2,9)
 ];
@@ -386,6 +356,9 @@ const LOW_B_FLAT_BORDER_COORDS: [(u32, u32); 34] =
     (2,6), (3,6), (4,6), (5,6), (6,6), (7,6), (8,6), (9,6), (10,6), (11,6), (12,6), (13,6)
 ];
 
+// The below constants define the "font" for the note name displayed on each chart. These
+// are simpler than the above, the positive space is defined pixel-by-pixel and the negative
+// space is left out. Note names have no concept of "active" or "inactive".
 const A_COORDS: [(u32, u32); 56] =
 [
     (2,0), (3,0), (4,0), (5,0), (2,1), (3,1), (4,1), (5,1), (0,2), (1,2), (6,2), (7,2), 
@@ -447,6 +420,8 @@ const FLAT_COORDS: [(u32, u32); 44] =
     (0,8), (1,8), (6,8), (7,8), (0,9), (1,9), (6,9), (7,9), (0,10), (1,10), (2,10), (3,10), 
     (4,10), (5,10), (0,11), (1,11), (2,11), (3,11), (4,11), (5,11)
 ];
+
+// A separator drawn between the lefthand and righthand front keys. Also defined pixel-by-pixel.
 const SEPARATOR_COORDS: [(u32, u32); 14] =
 [
     (0,0), (1,0), (2,0), (3,0), (4,0), (5,0), (6,0), (7,0), (8,0), (9,0), (10,0), (11,0),
