@@ -13,11 +13,27 @@ pub struct Note
     pub fingerings: Vec<Fingering>
 }
 
+impl PartialEq for Note
+{
+    fn eq(&self, other: &Self) -> bool 
+    {
+        self.byte == other.byte && self.fingerings == other.fingerings
+    }
+}
+
 /// Struct used for individual fingering charts, may be multiple per note
 pub struct Fingering
 {
     pub keys: EnumSet<Key>,
     pub image: image::DynamicImage
+}
+
+impl PartialEq for Fingering
+{
+    fn eq(&self, other: &Self) -> bool 
+    {
+        self.keys == other.keys
+    }
 }
 
 // Define notes and load note images using lazy_static

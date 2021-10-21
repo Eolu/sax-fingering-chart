@@ -1,6 +1,6 @@
 use crate::{track::*, note::{Note, NoteConst}};
 use std::{fs, collections::HashSet};
-use midly::{Smf, EventKind::*, MidiMessage::*};
+use midly::{Smf, TrackEventKind::*, MidiMessage::*};
 use image::{error::ImageError, GenericImageView, imageops::FilterType};
 
 /// Entire song, just a vec of tracks with some methods
@@ -19,7 +19,7 @@ impl Song
         let mut out_of_range: HashSet<u8> = HashSet::new();
 
         // Iterate through the midi file and collect notes
-        Song(midi.tracks
+        let mut tracks: Vec<Track> = midi.tracks
             .iter()
             .map(|track| track
                 .iter()
@@ -55,7 +55,24 @@ impl Song
                 {
                     Some(Track(candidates)) 
                 })
-            .collect())
+            .collect();
+        // Determine if every note in track is a duplicate
+        // TODO: This should not be necessary, find out why this happens
+        for track in tracks.iter_mut()
+        {
+            if track.notes().chunks(2).filter(|chunk| (chunk.len() == 2 && chunk[0] != chunk[1]) || chunk.len() == 1).next().is_none()
+            {
+                for i in (0..track.notes().len()).rev()
+                {
+                    if i % 2 == 0
+                    {
+                        track.notes_mut().remove(i);
+                    }
+                }
+                
+            }
+        }
+        Song(tracks)
     }
 
     /// Output chart with each cell as an individual file

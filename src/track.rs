@@ -54,9 +54,15 @@ impl Track
     }
 
     /// Access notes vector
-    fn notes(&self) -> &Vec<NoteConst>
+    pub fn notes(&self) -> &Vec<NoteConst>
     {
         &self.0
+    }
+
+    /// Access notes vector
+    pub fn notes_mut(&mut self) -> &mut Vec<NoteConst>
+    {
+        &mut self.0
     }
 
     /// Go through candidates and determine which fingerings to use
