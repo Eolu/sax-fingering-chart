@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.4] - 10/21/2021
+
+- Image data is now generated in a much more sane way through build scripts.
+- Implemented a workaround for a bug in which for some reason some midi files parse with 2 of every note. (Is this is bug in the midly library?)
+
 ## [0.2.1] - 9/5/2020
 
 - Realized charts were generating at 50% size right after publishing 2.0. Here's the fix.

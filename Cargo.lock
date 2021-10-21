@@ -51,6 +51,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0dbbb57365263e881e805dc77d94697c9118fd94d8da011240555aa7b23445bd"
 
 [[package]]
+name = "const-gen"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1fc7c7768754060052e5be10480d4dee366b896e05bd28b54015d531dc85e8a"
+dependencies = [
+ "const-gen-derive",
+]
+
+[[package]]
+name = "const-gen-derive"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ed46321c257fee2e57a6b23b7852c60a3f20e16db9f2b275a7e3c59121862ef"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "crc32fast"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -409,8 +429,9 @@ dependencies = [
 
 [[package]]
 name = "sax-fingering-chart"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
+ "const-gen",
  "enumset",
  "image",
  "lazy_static",

@@ -1,4 +1,4 @@
-mod image_data;
+pub(crate) mod image_data;
 
 use crate::note::{Note, Fingering};
 use image_data::*;

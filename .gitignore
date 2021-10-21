@@ -2,6 +2,7 @@
 /out
 /releases
 /fingerings
+/test_out
 res/midi.png
 *.zip
 *.exe
