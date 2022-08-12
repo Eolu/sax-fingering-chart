@@ -1,7 +1,7 @@
 use crate::{track::*, note::{Note, NoteConst}};
 use std::{fs, collections::HashSet};
 use midly::{Smf, TrackEventKind::*, MidiMessage::*};
-use image::{error::ImageError, GenericImageView, imageops::FilterType};
+use image::{error::ImageError, imageops::FilterType};
 
 /// Entire song, just a vec of tracks with some methods
 pub struct Song(Vec<Track>);

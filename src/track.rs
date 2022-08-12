@@ -1,5 +1,5 @@
 use crate::note::{NoteConst, Fingering};
-use image::{DynamicImage, GenericImageView, GenericImage};
+use image::{DynamicImage, GenericImage};
 
 /// Struct used for tracks
 pub struct Track(pub Vec<NoteConst>);
