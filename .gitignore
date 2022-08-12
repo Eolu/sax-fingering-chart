@@ -3,6 +3,7 @@
 /releases
 /fingerings
 /test_out
+/test_image_data
 res/midi.png
 *.zip
 *.exe
