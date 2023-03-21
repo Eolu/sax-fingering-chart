@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.5] - 3/21/2022
+
+- Fixed a bug causing certain transpoisition types to fail.
+
 ## [0.2.4] - 10/21/2021
 
 - Image data is now generated in a much more sane way through build scripts.

@@ -74,7 +74,7 @@ fn main() -> Result<(), ImageError>
         {
             for midi_file in env::args().skip(1)
             {
-                let fingering_chart = Song::load(&midi_file, config.transposition_type as u8);
+                let fingering_chart = Song::load(&midi_file, config.transposition_type as i16);
                 let dir_name = Path::new(&midi_file).file_stem().unwrap().to_string_lossy();
                 let output_path = format!("{}/{}", config.output_path, dir_name);
                 match config.output_format

@@ -9,7 +9,7 @@ pub struct Song(Vec<Track>);
 impl Song
 {
     /// Parse a midi file. Generate a list containing all tracks. Tracks themselves are simply lists of notes.
-    pub fn load(midi_path: &str, transposition: u8) -> Song
+    pub fn load(midi_path: &str, transposition: i16) -> Song
     {
         // Parse a midi file
         let raw_data = fs::read(midi_path).expect("Failed to load midi data");
@@ -26,7 +26,7 @@ impl Song
                 .filter_map(|event| 
                     if let Midi { channel: _, message: NoteOn {key, vel: _} } = event.kind 
                     { 
-                        let true_key = key.as_int() + transposition;
+                        let true_key = (key.as_int() as i16 + transposition) as u8;
                         let candidates = Note::get(true_key);
                         match candidates
                         {
